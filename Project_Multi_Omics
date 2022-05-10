@@ -1,0 +1,320 @@
+
+# Get all the filenames and cancer types
+#setwd("C:/Users/kitty/OneDrive/Desktop/Project Multi-Omics/Dados")
+#fileNames <- dir(pattern ="fpkm")
+#cancerTypes <- gsub("TCGA-", "", gsub("_htseq_fpkm-uq.tab", "", fileNames))
+#cancerTypes
+
+# Create a R list to save all information
+#geneExp <- vector("list", length=length(cancerTypes))
+#names(geneExp) <- cancerTypes
+# Loop to read each file and save information
+#for(i in 1:length(cancerTypes)){
+  # read file
+  #curData<-read.table(fileNames[i],sep="\t",header=T)
+  #Get the expression levels of your gene
+  #curData$X1=as.factor(curData$X1)
+  #curExp<-curData[curData$X1=="ENSG00000150907.6",]
+  # Save the information in R list
+  #geneExp[[i]] <- log2(curExp[-1])
+#}
+#Save your data for downstream analyses
+#save(geneExp, file = "geneExp.RData")
+
+#########
+#BOXPLOT#
+#########
+
+#PLOT THE EXPRESSION LEVELS OF THE GENE FOXO1 IN ALL SAMPLES (INCLUDING ALL THE TUMORAL AND THE NORMAL SAMPLES)
+setwd("C:/Users/kitty/OneDrive/Desktop/Project Multi-Omics/Dados")
+load("C:/Users/kitty/OneDrive/Desktop/Project Multi-Omics/Dados/geneExp.RData")
+
+#BOXPLOT FOR EXPRESSION LEVELS OF THE GENE FOXO1 IN ALL SAMPLES
+plot_geneExp<-lapply(geneExp, as.numeric) #
+View(plot_geneExp)
+boxplot(plot_geneExp,ylab="Expression Levels (log2 FPKMs)",xlab="Cancer Types",las=2)
+title(main="EXPRESSION LEVELS OF THE GENE FOXO1 IN ALL SAMPLES")
+boxplot(plot_geneExp[[2]],ylab="Expression Levels (log2 FPKMs)",xlab="Cancer Types",col="powderblue")
+
+#CREATE HEALTHY SAMPLES
+geneExp_healthy<-geneExp 
+for (i in 1:length(geneExp_healthy)){
+  #MEANS THAT WE ARE GOING TO WORK WITH THE IDS OF THE HEALTHY SAMPLES, SO WE DIVIDE THE NAME OF THE IDS IN THE POINTS IN THE 4º ELEMENT)
+  pref_healthy<-sapply(names(geneExp_healthy[[i]]),function(x)unlist(strsplit(x,"\\."))[4])
+  sample_ids_healthy<-names(pref_healthy)[grep("11",pref_healthy)]
+  geneExp_healthy[[i]]<-geneExp_healthy[[i]][sample_ids_healthy]
+}
+View(geneExp_healthy)
+
+#TUMURAL SAMPLES
+geneExp_tum<-geneExp 
+for (i in 1:length(geneExp_tum)){
+  #MEANS THAT WE ARE GOING TO WORK WITH THE IDS OF THE TUMORAL SAMPLES, SO WE DIVIDE THE NAME OF THE IDS IN THE POINTS IN THE 4º ELEMENT)
+  pref_tums<-sapply(names(geneExp_tum[[i]]),function(x)unlist(strsplit(x,"\\."))[4])
+  sample_ids<-names(pref_tums)[grep("0[1:7]",pref_tums)]
+  geneExp_tum[[i]]<-geneExp_tum[[i]][sample_ids]
+}
+View(geneExp_tum)
+
+#SELECIONAR DATA (dados significantes):
+View(geneExp_healthy)
+indexinclude<-which(unlist(lapply(geneExp_healthy,function(x)length(x)))>8)
+geneExp_healthy
+
+#SELECIONAR DATA HEALTHY:
+geneExp_healthy_<-geneExp_healthy[indexinclude]
+View(geneExp_healthy_)
+View(geneExp_healthy)
+#SELECIONAR DATA TUM:
+geneExp_tum_<-geneExp_tum[indexinclude]
+View(geneExp_tum_)
+View(geneExp_tum)
+
+#BOXPLOT THE EXPRESSION LEVELS OF THE GENE FOXO1 ONLY ON THE HEALTHY SAMPLES
+pdf("EXPRESSION_LEVELS_OF_THE_GENE_FOXO1_HEALTHY_SAMPLES.pdf")
+par(mar=c(6,4,4,4))
+plotData_healthy<-lapply(geneExp_healthy_, as.numeric)
+boxplot(plotData_healthy,outline=FALSE,ylab="FOXO1 Expression Levels (log2 FPKMs)", xlab="Cancer Types",las=2,main="EXPRESSION LEVELS OF THE GENE FOXO1 ONLY ON HEALTHY SAMPLES",col=("paleturquoise"))
+dev.off()
+
+#BOXPLOT THE EXPRESSION LEVELS OF THE GENE FOXO1 ONLY ON THE TUMORAL SAMPLES
+pdf("EXPRESSION_LEVELS_OF_THE_GENE_FOXO1_TUMORAL_SAMPLES.pdf")
+plotData_tum<-lapply(geneExp_tum_, as.numeric)
+boxplot(plotData_tum,outline=FALSE,ylab="FOXO1 Expression Levels (log2 FPKMs)", xlab="Cancer Types",las=2,main="EXPRESSION LEVELS OF THE GENE FOXO1 ONLY ON TUMORAL SAMPLES",col=("sienna2"))
+dev.off()
+
+#BOXPLOT COMPARAÇÃO DOS NÍVEIS DE EXPRESSÃO TUMORAIS E SAUDÁVEIS DE CADA AMOSTRA 
+plot_data<-list(plotData_healthy$BLCA,plotData_tum$BLCA,plotData_healthy$BRCA,plotData_tum$BRCA,plotData_healthy$CHOL,plotData_tum$CHOL,plotData_healthy$COAD,plotData_tum$COAD,plotData_healthy$ESCA,plotData_tum$ESCA,plotData_healthy$HNSC,plotData_tum$HNSC,plotData_healthy$KICH,plotData_tum$KICH,plotData_healthy$KIRC,plotData_tum$KIRC,plotData_healthy$KIRP,plotData_tum$KIRP,plotData_healthy$LIHC,plotData_tum$LIHC,plotData_healthy$LUAD,plotData_tum$LUAD,plotData_healthy$LUSC,plotData_tum$LUSC,plotData_healthy$PRAD,plotData_tum$PRAD,plotData_healthy$READ,plotData_tum$READ,plotData_healthy$STAD,plotData_tum$STAD,plotData_healthy$THCA,plotData_tum$THCA,plotData_healthy$UCEC,plotData_tum$UCEC)
+names(plot_data)=c("","BLCA","","BRCA","","CHOL","","COAD","","ESCA","","HNSC","","KICH","","KIRC","","KIRP","","LIHC","","LUAD","","LUSC","","PRAD","","READ","","STAD","","THCA","","UCEC")
+#names(plot_data)<-paste(names(plotdata_normII),"_n",sep="")
+#main="EXPRESSION LEVELS OF THE GENE FOXO1 ONLY ON HEALTHY SAMPLES"
+pdf("EXPRESSION_LEVELS_OF_THE_GENE_FOXO1_HEALTHY_SAMPLES_AND_TUMORAL_AND_POINT.pdf")
+par(mar=c(13,4.2,9.6,0.6), mgp=c(2.4,0.8, 0), las=1)
+boxplot(plot_data,outline=FALSE,ylab="FOXO1 Expression Levels (log2 FPKMs)",las=2,xaxs = FALSE,col=c("paleturquoise","sienna2"))
+legend("topleft",legend = c("Normal","Tumoral")[1:2],pch=15,col = c("paleturquoise","sienna2"),cex =0.5,horiz = T)
+points(x=0.635, y=26, pch="*", cex=2)
+dev.off()
+
+#Barplot FOR EXPRESSION LEVELS OF THE GENE FOXO1 IN ALL SAMPLES #corrigir para todos
+pdf("Number_of_samples_barplot.pdf")
+plot_data<-list(plotData_healthy$BLCA,plotData_tum$BLCA,plotData_healthy$BRCA,plotData_tum$BRCA,plotData_healthy$CHOL,plotData_tum$CHOL,plotData_healthy$COAD,plotData_tum$COAD,plotData_healthy$ESCA,plotData_tum$ESCA,plotData_healthy$HNSC,plotData_tum$HNSC,plotData_healthy$KICH,plotData_tum$KICH,plotData_healthy$KIRC,plotData_tum$KIRC,plotData_healthy$KIRP,plotData_tum$KIRP,plotData_healthy$LIHC,plotData_tum$LIHC,plotData_healthy$LUAD,plotData_tum$LUAD,plotData_healthy$LUSC,plotData_tum$LUSC,plotData_healthy$PRAD,plotData_tum$PRAD,plotData_healthy$READ,plotData_tum$READ,plotData_healthy$STAD,plotData_tum$STAD,plotData_healthy$THCA,plotData_tum$THCA,plotData_healthy$UCEC,plotData_tum$UCEC)
+names(plot_data)=c("","BLCA","","BRCA","","CHOL","","COAD","","ESCA","","HNSC","","KICH","","KIRC","","KIRP","","LIHC","","LUAD","","LUSC","","PRAD","","READ","","STAD","","THCA","","UCEC")
+
+number_samples_healthy_tum<- unlist(lapply(plot_data, length))
+healthy_tum_bar<-barplot(number_samples_healthy_tum,col=c("paleturquoise","sienna2"),xlab="Cancer Type",ylab="Number Of Samples",las=2)
+text(x= healthy_tum_bar, y=number_samples_healthy_tum,pos = 3, label = number_samples_healthy_tum, cex = 0.8, col = "black")
+legend("topright",legend = c("Normal","Tumoral")[1:2],pch=15,col = c("paleturquoise","sienna2"))
+dev.off()
+
+
+View(geneExp_healthy)
+
+#dataFrame
+temp <- cbind(names(plot_data), unlist(lapply(plot_data, function(x) length(x))))
+temp <- unlist(apply(temp, 1, function(x) rep(x[1], x[2])))
+plot_data_frame <- data.frame("cancer_Types"=temp, "geneExp"=unlist(plot_data))
+View(plot_data_frame)
+
+#VIOLIN GRAPHICS:
+library(ggplot2)
+p <- ggplot(plot_data_frame,xlas=2, aes(x=cancer_Types, y=geneExp))+ geom_violin()
+p
+dev.off()
+#ANÁLISE ESTATISTICA DOS DADOS:
+
+#BLCA
+BLCA_<-t.test(plotData_healthy$BLCA,plotData_tum$BLCA)
+BLCA<-BLCA_$p.value
+
+#BRCA
+BRCA_<-t.test(plotData_healthy$BRCA,plotData_tum$BRCA)
+BRCA<-BRCA_$p.value
+
+#CHOL
+CHOL_<-t.test(plotData_healthy$CHOL,plotData_tum$CHOL)
+CHOL<-CHOL_$p.value
+
+#COAD
+COAD_<-t.test(plotData_healthy$COAD,plotData_tum$COAD)
+COAD<-COAD_$p.value
+
+#ESCA
+ESCA_<-t.test(plotData_healthy$ESCA,plotData_tum$ESCA)
+ESCA<-ESCA_$p.value
+
+#HNSC
+HNSC_<-t.test(plotData_healthy$HNSC,plotData_tum$HNSC)
+HNSC<-HNSC_$p.value
+
+#KICH
+KICH_<-t.test(plotData_healthy$KICH,plotData_tum$KICH)
+KICH<-KICH_$p.value
+
+#KIRC
+KIRC_<-t.test(plotData_healthy$KIRC,plotData_tum$KIRC)
+KIRC<-KIRC_$p.value
+
+#KIRP
+KIRP_<-t.test(plotData_healthy$KIRP,plotData_tum$KIRP)
+KIRP<-KIRP_$p.value
+
+#LIHC
+LIHC_<-t.test(plotData_healthy$LIHC,plotData_tum$LIHC)
+LIHC<-LIHC_$p.value
+
+#LUAD
+LUAD_<-t.test(plotData_healthy$LUAD,plotData_tum$LUAD)
+LUAD<-LUAD_$p.value
+
+#LUSC
+LUSC_<-t.test(plotData_healthy$LUSC,plotData_tum$LUSC)
+LUSC<-LUSC_$p.value
+
+#PRAD
+PRAD_<-t.test(plotData_healthy$PRAD,plotData_tum$PRAD)
+PRAD<-PRAD_$p.value
+
+#READ
+READ_<-t.test(plotData_healthy$READ,plotData_tum$READ)
+READ<-READ_$p.value
+
+#STAD
+STAD_<-t.test(plotData_healthy$STAD,plotData_tum$STAD)
+STAD<-STAD_$p.value
+
+#THCA
+THCA_<-t.test(plotData_healthy$THCA,plotData_tum$THCA)
+THCA<-THCA_$p.value
+
+#UCEC
+UCEC_<-t.test(plotData_healthy$UCEC,plotData_tum$UCEC)
+UCEC<-UCEC_$p.value
+
+p_values<-c(BLCA,BRCA,CHOL,COAD,ESCA,HNSC,KICH,KIRC,KIRP,LIHC,LUAD,LUSC,PRAD,READ,STAD,THCA,UCEC)
+names(p_values)<-c("BLCA","BRCA","CHOL","COAD","ESCA","HNSC","KICH","KIRC","KIRP","LIHC","LUAD","LUSC","PRAD","READ","STAD","THCA","UCEC")
+p_value=as.data.frame(p_values)
+View(p_value)
+
+#p-values ajustados
+adjust_p_values<-p.adjust(p_values)
+adjust_p_values<-as.data.frame(adjust_p_values)
+View(adjust_p_values)
+#apenas o ESCA não é significativo com adjust p-value de 2.081852e-01>0.05
+
+#MEAN:
+
+mean_tum<-unlist(lapply(plotData_tum,function(x)mean(na.omit(x))))
+mean_healthy<-unlist(lapply(plotData_healthy,function(x)mean(na.omit(x))))
+logfc<-as.data.frame(mean_tum-mean_healthy)
+View(logfc)
+
+save(geneExp_tum_, file = "geneExp_tum_.RData")
+save(geneExp_tum,file="geneExp_tum.RData")
+##############################################################################################
+# Load the data to the survival analysis
+##############################################################################################
+
+setwd("C:/Users/kitty/OneDrive/Desktop/Project Multi-Omics/Dados")
+
+load("C:/Users/kitty/OneDrive/Desktop/Project Multi-Omics/Dados/geneExp_tum.RData")
+
+load("PanCancer_GDC_clinicalInfo.RData")
+##############################################################################################
+# Survival Analysis
+##############################################################################################
+
+# Install packages
+install.packages("survival")
+install.packages("survminer")
+
+# Load R packages
+library(survival);library(survminer)
+#library(survC1)-to another survival analysis
+#library(survival)-survfit
+#library(survminer)-ggsurvplots
+
+cancer_types<-c("ACC","BLCA","BRCA","CESC","CHOL","COAD","DLBC","ESCA","GBM","HNSC","KICH","KIRC","KIRP","LGG","LIHC","LUAD","LUSC","MESO","OV","PAAD","PCPG","PRAD","READ","SARC","SKCM","STAD","TGCT","THCA","THYM","UCEC","UCS","UVM")
+geneExp_tum__<-intersect(names(geneExp_tum),cancer_types)
+geneExp_tum<-geneExp_tum[geneExp_tum__]
+
+
+pdf("c_cancertum_____.pdf")
+for (i in 1:length(cancer_types)){
+  c_cancer<-cancer_types[i]
+
+#PARA KICH, O QUE APRESENTA MAIS EXPRESSÃO:
+table_cancer<-geneExp_tum[[c_cancer]]
+# Get names of the patients (in the same order that in the matrix logTPMs)
+tumorSamples <- colnames(table_cancer)
+#patientsIDs_original <- substring(tumorSamples, 1,12)
+#patientsIDs_original<-gsub("\\.","-",patientsIDs_original)
+patientsIDs <- substring(tumorSamples, 1,12)
+patientsIDs<-(gsub("\\.","-",patientsIDs))
+clinicalInfo_<-as.data.frame(clinicalInfo[[c_cancer]])
+#clinicalInfo_ <-clinicalInfo_[-which(clinicalInfo_$days_to_death=="-Inf"),]
+patientsIDs<-intersect(patientsIDs,rownames(clinicalInfo_))
+
+#Get survival information:
+
+clinicalInfo_[which(clinicalInfo_$days_to_death=="-Inf"),"days_to_death"]<-NA
+clinicalInfo_[which(clinicalInfo_$days_to_last_followup=="-6"),"days_to_last_followup"]<-NA
+clinicalInfo_[which(clinicalInfo_$days_to_last_followup=="-Inf"),"days_to_last_followup"]<-NA
+clinicalInfo_[which(clinicalInfo_$days_to_last_followup=="0"),"days_to_last_followup"]<-NA
+clinicalInfo_[which(clinicalInfo_$days_to_last_followup=="-64"),"days_to_last_followup"]<-NA
+clinicalInfo_[which(clinicalInfo_$days_to_death=="0"),"days_to_death"]<-NA
+clinicalInfo_[which(clinicalInfo_$days_to_death=="[Not Applicable]"),"days_to_death"]<-NA
+clinicalInfo_[which(clinicalInfo_$days_to_last_followup=="[Completed]"),"days_to_last_followup"]<-NA
+
+time <-unlist(apply(clinicalInfo_[patientsIDs, c("days_to_death","days_to_last_followup")],1, function(x) as.numeric(na.omit(x))))/365
+time<-na.omit(time)
+time<-as.data.frame(time)
+patients_<-intersect(rownames(time),rownames(clinicalInfo_))
+
+#alive=0;dead=1
+vitalStatus<-clinicalInfo_[patients_,"vital_status"]
+vitalStatus<-ifelse(vitalStatus=="Alive",0,1)
+
+# Classify patients according to expression levels of gene FOXO1
+geneExpLevels <- as.numeric(table_cancer[,match(patients_,patientsIDs)])#patients ids
+geneExpStatus <- ifelse(geneExpLevels> median(geneExpLevels), "High", "Low")
+
+#Create survival object
+data <- data.frame("time"=unlist(time), "status"=vitalStatus, "group"=geneExpStatus)
+#data<-na.omit(data)
+surv_data <- Surv(data$time, data$status)
+View(surv_data)
+View(data)
+
+#Estimate survival curve considering only 1 group with all samples
+surv_fit <- survfit(surv_data ~ 1, data=data)
+
+
+# Plot survival curve
+ggsurvplot(surv_fit, conf.int = F, risk.table = TRUE, title = paste("Survival curves",cancer_types[i]) ,xlab = paste("Time (years)",cancer_types[i]), censor = T,data=data)
+
+
+#Estimate survival curves for two groups: high and low expression
+surv_fit_groups <- survfit(surv_data ~ group, data=data)
+
+# Plot survival curves for two groups: high and low expression
+ggsurvplot(surv_fit_groups, conf.int = F,risk.table = TRUE, title = paste("Survival curves for two groups of expression",cancer_types[i]), xlab = "Time (years)", censor = T,data=data, pval=T,ncensor.plot = TRUE)
+
+
+#Compare two survival curves (get statistics)
+surv_groups <- survdiff(surv_data ~ group, data=data)
+print(surv_groups)
+
+p_val<-pchisq(surv_groups$chisq, length(surv_groups$n)-1, lower.tail = FALSE)
+print(p_val)
+adjust_p_values<-p.adjust(p_val)
+print(adjust_p_values)
+
+}
+
+
+dev.off()
+p.val <- 1 - pchisq(surv_groups$chisq, length(surv_groups$n) -1)
+p_value<-c(0.4680332,0.1253217,0.8683435,0.3094409,0.7478255,0.5739236,0.9061073,0.3522168,0.3719064,0.8301323,0.6929081,0.05354982,0.6309686,0.00408602,0.006188474,0.3055138,0.3524241,0.8316124,0.02138746,0.8176485,0.8751217,0.5361649,0.9259607,0.2165511,0.3853248,0.7645307,0.07462768,0.8772739,0.1544319,0.8930452,0.8196292,0.7875002)
+p_values<-as.data.frame(p_value,row.names = cancer_types)
+adjust_p_values<-p.adjust(p_value)
+p_values_and_adjust<-cbind(p_values,adjust_p_values)
