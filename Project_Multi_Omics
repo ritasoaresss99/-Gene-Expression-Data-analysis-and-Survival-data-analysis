@@ -48,10 +48,10 @@ for (i in 1:length(geneExp_tum)){
   geneExp_tum[[i]]<-geneExp_tum[[i]][sample_ids]
 }
 
-##############################
-#SELECT THE SIGNIFICANT DATA:#
-##############################
+
+#SELECT THE SIGNIFICANT DATA:
 #IN THIS STEP, IS  SELECTED FROM THE 33 TYPES OF CANCER, ONLY 17 TYPES OF CANCER ( THE ONES THAT HAVE GENE EXPRESSION VALUES FOR BOTH TISSUES, THE NORMAL AND THE TUMORAL)
+
 indexinclude<-which(unlist(lapply(geneExp_normal,function(x)length(x)))>8)
 
 #SELECT THE SIGNIFICANT NORMAL DATA:
